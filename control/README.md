@@ -3,7 +3,7 @@
 برنامج ويندوز تتحكم منه بالبوتات الثلاث (الموسيقى، والألعاب، والسيستم) وبـ Lavalink اللي على السيرفر.
 
 ```
-برنامج ويندوز  ⇄ HTTPS ⇄  Caddy  ⇄  gnd-control (Agent)  ⇄  pm2  ⇄  البوتات
+برنامج ويندوز  ⇄ HTTPS ⇄  Coolify (Traefik)  ⇄  gnd-control (Agent)  ⇄  pm2  ⇄  البوتات
                                           └─→ GitHub Issues (تقارير لـ Claude)
 ```
 
@@ -33,7 +33,19 @@
 
 2. **أسماء pm2:** الـ Agent يتوقع نفس الأسماء اللي على السيرفر: `bot` (الموسيقى) و `games` و `system` و `lavalink` و `web` (الموقع). إذا غيّرتها، انسخ `control/agent/bots.example.json` إلى `control/agent/bots.json` وعدّل الأسماء، وبعدها `pm2 restart gnd-control`.
 
-3. **افتحه على HTTPS:** سيرفرك عليه Coolify، وبروكسي Coolify (Traefik) هو اللي ماسك البورت 80 و 443، فما نستخدم Caddy. نضيف دومين فرعي مثل `control.gndbot.site` يحوّل على الـ Agent بنفس الطريقة اللي يتحوّل فيها `gndbot.site` للموقع. (الخطوات بالضبط تنضاف هنا بعد ما نشوف إعداد الدومين الحالي.)
+3. **افتحه على HTTPS عن طريق Coolify:** بروكسي Coolify (Traefik) هو اللي ماسك البورت 80 و 443، ويوصّل `gndbot.site` للموقع على `host.docker.internal:3000`. نضيف له مسار `/gnd-control` يروح للـ Agent، فما تحتاج دومين جديد:
+   ```bash
+   # كـ root
+   ip -4 -o addr show docker0 | awk '{print $4}'      # غالباً 172.17.0.1/16
+   ```
+   - حط الـ IP (بدون `/16`) في `/home/gnd/botm/control/agent/.env`، كذا: `CONTROL_HOST=172.17.0.1`. بهالطريقة يوصل للـ Agent بروكسي Coolify بس، ومحد يوصله مباشرة من الإنترنت. بعدها `sudo -iu gnd pm2 restart gnd-control`.
+   - انسخ ملف المسار:
+     ```bash
+     cp /home/gnd/botm/control/deploy/coolify-gnd-control.yaml /data/coolify/proxy/dynamic/gnd-control.yaml
+     ```
+     Traefik يقرأه لحاله خلال ثواني.
+   - للتأكد: افتح `https://gndbot.site/gnd-control/healthz`، والمفروض تطلع لك كلمة `ok`.
+   - رابط السيرفر اللي تحطه في البرنامج: `https://gndbot.site/gnd-control`
 
 4. **اربط البوتات:** أضف هذا السطر في كل بوت بعد ما يتسوى الـ `client` (المسار نسبي من ملف البوت):
    ```js
@@ -60,10 +72,10 @@
 
 ويندوز ممكن يطلع لك تحذير SmartScreen لأن البرنامج غير موقّع: اضغط **More info** ← **Run anyway**.
 
-أول ما يفتح البرنامج، حط رابط السيرفر (`https://control.your-domain.com`) والمفتاح، واضغط **اتصال**.
+أول ما يفتح البرنامج، حط رابط السيرفر (`https://gndbot.site/gnd-control`) والمفتاح، واضغط **اتصال**.
 
 ## الأمان
-- الـ Agent يسمع على `127.0.0.1` بس، والوصول له من برّا يكون عن طريق Caddy (HTTPS).
+- الـ Agent يسمع على عنوان داخلي بس (`127.0.0.1`، أو `172.17.0.1` مع Coolify)، والوصول له من برّا يكون عن طريق بروكسي HTTPS.
 - كل طلب يحتاج مفتاح API، وبعد 10 محاولات غلط يتقفل الـ IP لمدة 15 دقيقة.
 - قيم `.env` ما تطلع من السيرفر أبداً، والتوكنات (ديسكورد وGitHub والـ webhooks وأي قيمة سرية من `.env` أو pm2) تنشال من السجلات والتقارير.
 - البرنامج يحفظ المفتاح مشفّر بحساب ويندوز (DPAPI)، وواجهة البرنامج نفسها ما تشوف المفتاح.

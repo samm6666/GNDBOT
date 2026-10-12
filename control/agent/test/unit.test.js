@@ -71,10 +71,13 @@ test('limiter caps requests per minute', () => {
   assert.strictEqual(l.check('ip'), 0);
 });
 
-test('clientIp trusts X-Forwarded-For only from localhost', () => {
+test('clientIp trusts X-Forwarded-For only from a local or private proxy', () => {
   const req = (remote, xff) => ({ socket: { remoteAddress: remote }, headers: xff ? { 'x-forwarded-for': xff } : {} });
-  assert.strictEqual(clientIp(req('127.0.0.1', '9.9.9.9, 1.1.1.1'), true), '9.9.9.9');
-  assert.strictEqual(clientIp(req('5.5.5.5', '9.9.9.9'), true), '5.5.5.5');
+  assert.strictEqual(clientIp(req('127.0.0.1', '9.9.9.9'), true), '9.9.9.9');
+  assert.strictEqual(clientIp(req('::ffff:172.17.0.2', '9.9.9.9'), true), '9.9.9.9', 'Traefik in Docker');
+  assert.strictEqual(clientIp(req('10.0.1.5', '6.6.6.6, 9.9.9.9'), true), '9.9.9.9', 'the proxy-added hop wins over a forged one');
+  assert.strictEqual(clientIp(req('5.5.5.5', '9.9.9.9'), true), '5.5.5.5', 'public peers cannot spoof');
+  assert.strictEqual(clientIp(req('172.32.0.1', '9.9.9.9'), true), '172.32.0.1', '172.32/16 is public');
   assert.strictEqual(clientIp(req('127.0.0.1', '9.9.9.9'), false), '127.0.0.1');
 });
 

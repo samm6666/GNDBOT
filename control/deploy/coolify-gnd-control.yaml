@@ -1,0 +1,25 @@
+# Traefik route for the GND Control agent on a Coolify server.
+# Copy to /data/coolify/proxy/dynamic/gnd-control.yaml (Traefik reloads it by itself).
+# The desktop app then connects to https://gndbot.site/gnd-control
+http:
+  routers:
+    gnd-control:
+      rule: '(Host(`gndbot.site`) || Host(`www.gndbot.site`)) && PathPrefix(`/gnd-control`)'
+      priority: 100
+      entryPoints:
+        - https
+      middlewares:
+        - gnd-control-strip
+      service: gnd-control
+      tls:
+        certResolver: letsencrypt
+  middlewares:
+    gnd-control-strip:
+      stripPrefix:
+        prefixes:
+          - /gnd-control
+  services:
+    gnd-control:
+      loadBalancer:
+        servers:
+          - url: 'http://host.docker.internal:7420'

@@ -26,5 +26,5 @@ fi
 pm2 save
 
 echo
-echo "Agent is running on 127.0.0.1:7420."
-echo "Next: expose it with Caddy (see control/README.md), then connect the desktop app."
+echo "Agent is running under pm2 as gnd-control (port 7420)."
+echo "Next: expose it through the reverse proxy (see control/README.md), then connect the desktop app."

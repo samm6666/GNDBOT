@@ -18,11 +18,23 @@ function bearer(req) {
   return m ? m[1].trim() : '';
 }
 
+// Loopback and private (Docker/LAN) addresses: where a reverse proxy such as Caddy or
+// Coolify's Traefik connects from. Public addresses never get to set X-Forwarded-For.
+function isPrivate(addr) {
+  const ip = addr.replace(/^::ffff:/, '');
+  if (ip === '::1' || ip.startsWith('127.')) return true;
+  if (ip.startsWith('10.') || ip.startsWith('192.168.')) return true;
+  const m = /^172\.(\d+)\./.exec(ip);
+  if (m && +m[1] >= 16 && +m[1] <= 31) return true;
+  return /^f[cd][0-9a-f]{2}:/i.test(ip);
+}
+
 function clientIp(req, trustProxy) {
   const remote = req.socket.remoteAddress || '';
-  const isLocal = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
-  if (trustProxy && isLocal && req.headers['x-forwarded-for']) {
-    return String(req.headers['x-forwarded-for']).split(',')[0].trim();
+  if (trustProxy && isPrivate(remote) && req.headers['x-forwarded-for']) {
+    // The proxy appends the real client last; anything before it can be forged by the client.
+    const hops = String(req.headers['x-forwarded-for']).split(',').map((s) => s.trim()).filter(Boolean);
+    return hops[hops.length - 1] || remote;
   }
   return remote;
 }
@@ -78,4 +90,4 @@ class Limiter {
   }
 }
 
-module.exports = { keyMatches, bearer, clientIp, Limiter };
+module.exports = { keyMatches, bearer, clientIp, isPrivate, Limiter };
