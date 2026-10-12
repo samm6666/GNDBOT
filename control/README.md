@@ -23,22 +23,17 @@
 
 ## التركيب على السيرفر (مرة وحدة)
 
-1. **شغّل الـ Agent:**
+1. **شغّل الـ Agent بنفس المستخدم اللي يشغّل البوتات (`gnd`):**
    ```bash
-   cd /path/to/botm
+   sudo -iu gnd
+   cd ~/botm
    bash control/agent/setup.sh
    ```
-   السكربت يثبّت المكتبات، ويسوي مفتاح API جديد ويطبعه، ويشغّل `gnd-control` في pm2. **انسخ المفتاح**، بتحتاجه في البرنامج.
+   السكربت يثبّت المكتبات، ويسوي مفتاح API جديد ويطبعه، ويشغّل `gnd-control` في pm2 حق `gnd` (نفس pm2 اللي فيه البوتات). **انسخ المفتاح**، بتحتاجه في البرنامج.
 
-2. **أسماء pm2:** الـ Agent يتوقع نفس الأسماء اللي على السيرفر: `bot` (الموسيقى) و `games` و `system` و `lavalink`. إذا غيّرتها، انسخ `control/agent/bots.example.json` إلى `control/agent/bots.json` وعدّل الأسماء، وبعدها `pm2 restart gnd-control`.
+2. **أسماء pm2:** الـ Agent يتوقع نفس الأسماء اللي على السيرفر: `bot` (الموسيقى) و `games` و `system` و `lavalink` و `web` (الموقع). إذا غيّرتها، انسخ `control/agent/bots.example.json` إلى `control/agent/bots.json` وعدّل الأسماء، وبعدها `pm2 restart gnd-control`.
 
-3. **افتحه على HTTPS عن طريق Caddy:** أضف هذا لـ `deploy/Caddyfile` (غيّر الدومين لدومينك، وخلّ سجل DNS حقه يأشر على السيرفر):
-   ```
-   control.your-domain.com {
-       reverse_proxy 127.0.0.1:7420
-   }
-   ```
-   بعدها `sudo systemctl reload caddy`.
+3. **افتحه على HTTPS:** سيرفرك عليه Coolify، وبروكسي Coolify (Traefik) هو اللي ماسك البورت 80 و 443، فما نستخدم Caddy. نضيف دومين فرعي مثل `control.gndbot.site` يحوّل على الـ Agent بنفس الطريقة اللي يتحوّل فيها `gndbot.site` للموقع. (الخطوات بالضبط تنضاف هنا بعد ما نشوف إعداد الدومين الحالي.)
 
 4. **اربط البوتات:** أضف هذا السطر في كل بوت بعد ما يتسوى الـ `client` (المسار نسبي من ملف البوت):
    ```js

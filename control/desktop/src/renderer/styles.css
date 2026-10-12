@@ -194,6 +194,7 @@ select.input { cursor: pointer; }
 .line .b.games { color: #67e8f9; }
 .line .b.system { color: #c4b5fd; }
 .line .b.lavalink { color: #f9a8d4; }
+.line .b.web { color: #86efac; }
 .line.err .m { color: var(--bad); }
 .line.evt .m { color: var(--info); font-style: italic; }
 mark { background: var(--warn); color: #000; border-radius: 3px; }

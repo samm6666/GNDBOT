@@ -142,7 +142,7 @@ test('config validation requires a long API key', () => {
   assert.ok(configLib.validate(short).length > 0);
   const ok = configLib.load({ env: { CONTROL_API_KEY: 'k'.repeat(43) }, envFile: '/nonexistent', botsFile: '/nonexistent' });
   assert.deepStrictEqual(configLib.validate(ok), []);
-  assert.deepStrictEqual(ok.bots.map((b) => b.id), ['music', 'games', 'system', 'lavalink']);
+  assert.deepStrictEqual(ok.bots.map((b) => b.id), ['music', 'games', 'system', 'lavalink', 'web']);
 });
 
 test('bot-link maps activity names to discord activity types', () => {

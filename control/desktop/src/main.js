@@ -9,7 +9,7 @@ const WebSocket = require('ws');
 
 const ICON = path.join(__dirname, '..', 'build', 'icon.png');
 const CONFIG_FILE = () => path.join(app.getPath('userData'), 'config.json');
-const BOT_NAMES = { music: 'بوت الموسيقى', games: 'بوت الألعاب', system: 'بوت السيستم', lavalink: 'Lavalink' };
+const BOT_NAMES = { music: 'بوت الموسيقى', games: 'بوت الألعاب', system: 'بوت السيستم', lavalink: 'Lavalink', web: 'الموقع' };
 
 let win = null;
 let tray = null;

@@ -23,7 +23,7 @@ function h(tag, attrs = {}, ...children) {
   return el;
 }
 
-const BOT_AR = { music: 'بوت الموسيقى', games: 'بوت الألعاب', system: 'بوت السيستم', lavalink: 'Lavalink' };
+const BOT_AR = { music: 'بوت الموسيقى', games: 'بوت الألعاب', system: 'بوت السيستم', lavalink: 'Lavalink', web: 'الموقع' };
 const STATUS_AR = {
   online: 'شغال',
   stopped: 'طافي',
