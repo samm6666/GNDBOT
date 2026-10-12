@@ -2,6 +2,9 @@ name: GND Control
 
 on:
   push:
+    # Listing only tags would make GitHub skip branch pushes, so name both.
+    branches:
+      - "**"
     paths:
       - "control/**"
       - ".github/workflows/control.yml"
