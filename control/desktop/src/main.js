@@ -237,6 +237,7 @@ handle('config:get', () => {
   return {
     server: cfg.server || '',
     hasKey: Boolean(getKey(cfg)),
+    keyEncrypted: Boolean(cfg.keyEncrypted),
     notifications: cfg.notifications !== false,
     closeToTray: cfg.closeToTray !== false,
     liveState: live.state,

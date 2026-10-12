@@ -51,6 +51,7 @@ const state = {
   settingsBot: null,
   report: '',
   configured: false,
+  lastUser: {}, // last known discord user per bot, so a stopped bot keeps its name and avatar
 };
 
 // ---------- helpers ----------
@@ -91,8 +92,14 @@ function botName(b) {
   return BOT_AR[b.id] || b.label || b.id;
 }
 
+function userOf(b) {
+  if (b.stats && b.stats.user) state.lastUser[b.id] = b.stats.user;
+  return state.lastUser[b.id] || null;
+}
+
 function avatarOf(b) {
-  const url = b.stats && b.stats.user && b.stats.user.avatar;
+  const user = userOf(b);
+  const url = user && user.avatar;
   return typeof url === 'string' && /^https:\/\/(cdn|media)\.discordapp\.(com|net)\//.test(url) ? url : FALLBACK_AVATAR;
 }
 
@@ -100,6 +107,36 @@ function toast(text, kind = '') {
   const t = h('div', { class: `toast ${kind}`, text });
   $('#toasts').append(t);
   setTimeout(() => t.remove(), kind === 'bad' ? 7000 : 4000);
+}
+
+// In-app confirmation dialog (the native confirm() box is English and unthemed).
+function ask(text, okLabel = 'تأكيد', danger = false) {
+  return new Promise((resolve) => {
+    const modal = $('#modal');
+    const ok = $('#modal-ok');
+    $('#modal-text').textContent = text;
+    ok.textContent = okLabel;
+    ok.className = `btn ${danger ? 'danger-fill' : 'primary'}`;
+    modal.classList.remove('hidden');
+    ok.focus();
+    const done = (value) => {
+      modal.classList.add('hidden');
+      ok.onclick = null;
+      $('#modal-cancel').onclick = null;
+      modal.onclick = null;
+      document.removeEventListener('keydown', onKey);
+      resolve(value);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') done(false);
+    };
+    ok.onclick = () => done(true);
+    $('#modal-cancel').onclick = () => done(false);
+    modal.onclick = (e) => {
+      if (e.target === modal) done(false);
+    };
+    document.addEventListener('keydown', onKey);
+  });
 }
 
 async function api(method, path, body) {
@@ -196,7 +233,7 @@ function botCard(b) {
   const action = (label, act, cls) => h('button', {
     class: `btn sm ${cls}`,
     onclick: (e) => busy(e.currentTarget, async () => {
-      if (act === 'stop' && !confirm(`تبي توقف ${botName(b)}؟`)) return;
+      if (act === 'stop' && !(await ask(`تبي توقف ${botName(b)}؟`, 'إيقاف', true))) return;
       await api('POST', `/api/bots/${b.id}/${act}`);
       toast(`${botName(b)}: تم`, 'ok');
       refreshSoon();
@@ -212,7 +249,7 @@ function botCard(b) {
     h('div', { class: 'card-head' },
       h('img', { class: 'avatar', src: avatarOf(b), alt: '' }),
       h('div', { class: 'card-title' },
-        h('div', { class: 'name', text: (s.user && s.user.username) || botName(b) }),
+        h('div', { class: 'name', text: (userOf(b) || {}).username || botName(b) }),
         h('div', { class: 'sub', text: `${botName(b)} · ${b.pm2}${b.restarts ? ` · ${b.restarts} ريستارت` : ''}` })),
       h('span', { class: `pill ${b.status}`, text: STATUS_AR[b.status] || b.status })),
     b.kind === 'bot' ? h('div', { class: 'presence', text: online ? presence : '' }) : null,
@@ -226,7 +263,7 @@ function botCard(b) {
 
 $('#refresh').addEventListener('click', (e) => busy(e.currentTarget, refresh));
 $('#restart-all').addEventListener('click', (e) => busy(e.currentTarget, async () => {
-  if (!confirm('ريستارت لكل البوتات؟')) return;
+  if (!(await ask('ريستارت لكل البوتات؟', 'ريستارت'))) return;
   const res = await api('POST', '/api/bots/all/restart');
   const failed = Object.entries(res.results).filter(([, v]) => v !== 'ok');
   toast(failed.length ? `فيه بوتات ما اشتغلت: ${failed.map(([k]) => BOT_AR[k] || k).join('، ')}` : 'تم ريستارت كل البوتات', failed.length ? 'bad' : 'ok');
@@ -354,7 +391,7 @@ async function selectSettingsBot(id) {
   if (!b) return;
   const s = b.stats || {};
   $('#profile-avatar').src = avatarOf(b);
-  $('#profile-name').value = (s.user && s.user.username) || '';
+  $('#profile-name').value = (userOf(b) || {}).username || '';
   if (s.presence) $('#presence-status').value = s.presence.status || 'online';
   await loadEnv();
 }
@@ -384,7 +421,7 @@ async function loadEnv() {
         h('button', {
           class: 'btn sm danger',
           onclick: (e) => busy(e.currentTarget, async () => {
-            if (!confirm(`حذف ${k.key}؟`)) return;
+            if (!(await ask(`حذف ${k.key} من ملف .env؟`, 'حذف', true))) return;
             await saveEnv(k.key, null);
           }),
         }, 'حذف')))));
@@ -494,13 +531,14 @@ function updateLine(text) {
 }
 
 $('#update-run').addEventListener('click', async (e) => {
-  if (!confirm('تحديث البوتات من GitHub؟ البوتات بتسوي ريستارت إذا فيه تغييرات.')) return;
+  const btn = e.currentTarget;
+  if (!(await ask('تحديث البوتات من GitHub؟ البوتات بتسوي ريستارت إذا فيه تغييرات.', 'تحديث'))) return;
   $('#update-console').replaceChildren();
-  e.currentTarget.disabled = true;
+  btn.disabled = true;
   try {
     await api('POST', '/api/update');
   } catch {
-    e.currentTarget.disabled = false;
+    btn.disabled = false;
   }
 });
 
@@ -563,7 +601,9 @@ async function renderConnection() {
   const cfg = await gnd.config();
   $('#conn-server').value = cfg.server;
   $('#conn-key').value = '';
-  $('#conn-key-state').textContent = cfg.hasKey ? 'المفتاح محفوظ ومشفّر على جهازك. اتركه فاضي عشان تستخدم المحفوظ.' : 'ما فيه مفتاح محفوظ.';
+  $('#conn-key-state').textContent = !cfg.hasKey
+    ? 'ما فيه مفتاح محفوظ.'
+    : `المفتاح محفوظ على جهازك${cfg.keyEncrypted ? ' ومشفّر بحسابك في ويندوز' : ' (التشفير غير متاح على هذا النظام)'}. اتركه فاضي عشان تستخدم المحفوظ.`;
   $('#pref-notify').checked = cfg.notifications;
   $('#pref-tray').checked = cfg.closeToTray;
 }
@@ -581,7 +621,7 @@ $('#conn-save').addEventListener('click', (e) => busy(e.currentTarget, async () 
   }
 }));
 $('#conn-forget').addEventListener('click', (e) => busy(e.currentTarget, async () => {
-  if (!confirm('تبي تمسح المفتاح من الجهاز؟')) return;
+  if (!(await ask('تبي تمسح المفتاح من الجهاز؟', 'مسح', true))) return;
   await gnd.forgetKey();
   state.configured = false;
   await renderConnection();

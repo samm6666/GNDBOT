@@ -1,0 +1,60 @@
+name: GND Control
+
+on:
+  push:
+    paths:
+      - "control/**"
+      - ".github/workflows/control.yml"
+    tags:
+      - "control-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  agent-tests:
+    name: Agent tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: control/agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: control/agent/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  windows-app:
+    name: Build Windows app (.exe)
+    runs-on: windows-latest
+    needs: agent-tests
+    defaults:
+      run:
+        working-directory: control/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: control/desktop/package-lock.json
+      - run: npm ci
+      - name: Build installer
+        run: npx electron-builder --win --x64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GND-Control-Setup
+          path: control/desktop/dist/*.exe
+          if-no-files-found: error
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/control-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: control/desktop/dist/*.exe

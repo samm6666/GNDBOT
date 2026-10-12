@@ -9,7 +9,8 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win --x64 --publish never",
-    "preview": "node test/preview.js"
+    "preview": "node test/preview.js",
+    "e2e": "node test/e2e.js"
   },
   "dependencies": {
     "ws": "^8.22.0"
