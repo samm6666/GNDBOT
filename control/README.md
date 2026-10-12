@@ -30,7 +30,7 @@
    ```
    السكربت يثبّت المكتبات، ويسوي مفتاح API جديد ويطبعه، ويشغّل `gnd-control` في pm2. **انسخ المفتاح**، بتحتاجه في البرنامج.
 
-2. **طابق أسماء pm2:** شغّل `pm2 list` وشوف أسماء البوتات. إذا كانت غير `gnd-music` و `gnd-games` و `gnd-system` و `lavalink`، انسخ `control/agent/bots.example.json` إلى `control/agent/bots.json` وعدّل الأسماء، وبعدها `pm2 restart gnd-control`.
+2. **أسماء pm2:** الـ Agent يتوقع نفس الأسماء اللي على السيرفر: `bot` (الموسيقى) و `games` و `system` و `lavalink`. إذا غيّرتها، انسخ `control/agent/bots.example.json` إلى `control/agent/bots.json` وعدّل الأسماء، وبعدها `pm2 restart gnd-control`.
 
 3. **افتحه على HTTPS عن طريق Caddy:** أضف هذا لـ `deploy/Caddyfile` (غيّر الدومين لدومينك، وخلّ سجل DNS حقه يأشر على السيرفر):
    ```

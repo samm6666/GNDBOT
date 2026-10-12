@@ -21,7 +21,7 @@ const p = (fn, ...a) => new Promise((res, rej) => fn.call(pm2, ...a, (e, r) => (
   fs.mkdirSync(path.join(root, 'deploy'));
   fs.writeFileSync(path.join(root, '.env'), 'DISCORD_TOKEN=e2e-music-secret\n');
   const app = (name, bn) => ({ name, script: FAKEBOT, cwd: root, env: { BOT_NAME: bn, DISCORD_TOKEN: 'e2e-music-secret' } });
-  fs.writeFileSync(path.join(root, 'deploy/ecosystem.config.js'), `module.exports=${JSON.stringify({ apps: [app('gnd-music', 'GND Music'), app('gnd-games', 'GND Games'), app('gnd-system', 'GND System')] })}`);
+  fs.writeFileSync(path.join(root, 'deploy/ecosystem.config.js'), `module.exports=${JSON.stringify({ apps: [app('bot', 'GND Music'), app('games', 'GND Games'), app('system', 'GND System')] })}`);
   await p(pm2.connect);
   await p(pm2.start, path.join(root, 'deploy/ecosystem.config.js'), {});
   const agent = spawn(process.execPath, [REPO + '/agent/src/index.js'], {

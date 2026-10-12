@@ -38,7 +38,7 @@ function setupProject() {
   fs.writeFileSync(path.join(root, 'lavalink.js'), "setInterval(() => console.log('[Lavalink] player update'), 1500);\n");
   const app = (name, botName) => ({ name, script: FAKEBOT, cwd: root, env: { BOT_NAME: botName, DISCORD_TOKEN: `${name}-token` } });
   fs.writeFileSync(path.join(root, 'deploy', 'ecosystem.config.js'), `module.exports = ${JSON.stringify({
-    apps: [app('gnd-music', 'GND Music'), app('gnd-games', 'GND Games'), app('gnd-system', 'GND System'), { name: 'lavalink', script: path.join(root, 'lavalink.js') }],
+    apps: [app('bot', 'GND Music'), app('games', 'GND Games'), app('system', 'GND System'), { name: 'lavalink', script: path.join(root, 'lavalink.js') }],
   })};`);
 }
 

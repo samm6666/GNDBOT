@@ -41,12 +41,12 @@ function int(v, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-// The three bots plus Lavalink. `pm2` is the pm2 app name, `dir` and `env`
+// The three bots plus Lavalink, with the pm2 app names used on the VPS. `dir` and `env`
 // are relative to the project root. Override any of it with control/agent/bots.json.
 const DEFAULT_BOTS = [
-  { id: 'music', label: 'الموسيقى', pm2: 'gnd-music', dir: '.', env: '.env', kind: 'bot' },
-  { id: 'games', label: 'الألعاب', pm2: 'gnd-games', dir: 'games', env: 'games/.env', kind: 'bot' },
-  { id: 'system', label: 'السيستم', pm2: 'gnd-system', dir: 'system', env: 'system/.env', kind: 'bot' },
+  { id: 'music', label: 'الموسيقى', pm2: 'bot', dir: '.', env: '.env', kind: 'bot' },
+  { id: 'games', label: 'الألعاب', pm2: 'games', dir: 'games', env: 'games/.env', kind: 'bot' },
+  { id: 'system', label: 'السيستم', pm2: 'system', dir: 'system', env: 'system/.env', kind: 'bot' },
   { id: 'lavalink', label: 'Lavalink', pm2: 'lavalink', dir: 'lavalink', env: null, kind: 'service' },
 ];
 
