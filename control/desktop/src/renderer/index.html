@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://cdn.discordapp.com https://media.discordapp.net; font-src 'self'; connect-src 'none'">
+  <title>GND Control</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../../build/icon.png" alt="" class="brand-logo">
+        <div>
+          <div class="brand-name">GND Control</div>
+          <div class="brand-sub" id="live-state"><span class="dot"></span><span class="label">غير متصل</span></div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-page="home"><span class="ico">◉</span>الرئيسية</button>
+        <button class="nav-item" data-page="logs"><span class="ico">≡</span>السجلات</button>
+        <button class="nav-item" data-page="settings"><span class="ico">⚙</span>إعدادات البوتات</button>
+        <button class="nav-item" data-page="server"><span class="ico">▣</span>السيرفر</button>
+        <button class="nav-item" data-page="report"><span class="ico">✦</span>تقرير لـ Claude</button>
+        <div class="nav-spacer"></div>
+        <button class="nav-item" data-page="connection"><span class="ico">⇄</span>الاتصال</button>
+      </nav>
+      <div class="sidebar-foot" id="agent-version"></div>
+    </aside>
+
+    <main class="main">
+      <!-- Home -->
+      <section class="page active" id="page-home">
+        <header class="page-head">
+          <div>
+            <h1>الرئيسية</h1>
+            <p class="muted">حالة البوتات الثلاث مباشرة</p>
+          </div>
+          <div class="actions">
+            <button class="btn ghost" id="refresh">تحديث</button>
+            <button class="btn primary" id="restart-all">ريستارت الكل</button>
+          </div>
+        </header>
+        <div class="summary" id="summary"></div>
+        <div class="cards" id="bot-cards"></div>
+      </section>
+
+      <!-- Logs -->
+      <section class="page" id="page-logs">
+        <header class="page-head">
+          <div>
+            <h1>السجلات</h1>
+            <p class="muted">كل اللي يطبعه البوت، لحظة بلحظة (التوكنات تنشال تلقائياً)</p>
+          </div>
+          <div class="actions">
+            <button class="btn ghost" id="logs-pause">إيقاف مؤقت</button>
+            <button class="btn ghost" id="logs-clear">مسح الشاشة</button>
+          </div>
+        </header>
+        <div class="toolbar">
+          <div class="tabs" id="logs-bots"></div>
+          <div class="toolbar-end">
+            <label class="check"><input type="checkbox" id="logs-errors"> الأخطاء بس</label>
+            <input class="input" id="logs-search" placeholder="بحث في السجلات..." dir="auto">
+          </div>
+        </div>
+        <div class="console" id="logs-console" dir="ltr"></div>
+      </section>
+
+      <!-- Bot settings -->
+      <section class="page" id="page-settings">
+        <header class="page-head">
+          <div>
+            <h1>إعدادات البوتات</h1>
+            <p class="muted">الحالة والاسم والصورة وملف ‎.env‎ لكل بوت</p>
+          </div>
+        </header>
+        <div class="tabs" id="settings-bots"></div>
+        <div class="grid-2">
+          <div class="panel">
+            <h2>الحالة (Status)</h2>
+            <div class="form">
+              <label>الحالة
+                <select class="input" id="presence-status">
+                  <option value="online">متصل (Online)</option>
+                  <option value="idle">خامل (Idle)</option>
+                  <option value="dnd">مشغول (DND)</option>
+                  <option value="invisible">مخفي (Invisible)</option>
+                </select>
+              </label>
+              <label>نوع النشاط
+                <select class="input" id="presence-type">
+                  <option value="custom">حالة مخصصة</option>
+                  <option value="playing">يلعب</option>
+                  <option value="listening">يستمع</option>
+                  <option value="watching">يشاهد</option>
+                  <option value="competing">ينافس</option>
+                  <option value="streaming">بث مباشر</option>
+                </select>
+              </label>
+              <label>النص
+                <input class="input" id="presence-text" maxlength="128" placeholder="مثال: /play | GND" dir="auto">
+              </label>
+              <label class="hidden" id="presence-url-wrap">رابط البث
+                <input class="input" id="presence-url" placeholder="https://twitch.tv/..." dir="ltr">
+              </label>
+              <div class="row">
+                <button class="btn primary" id="presence-save">تطبيق</button>
+                <button class="btn ghost" id="presence-clear">إرجاع الافتراضي</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>الاسم والصورة</h2>
+            <div class="profile">
+              <img id="profile-avatar" class="avatar lg" alt="">
+              <div class="form grow">
+                <label>اسم البوت
+                  <input class="input" id="profile-name" maxlength="32" dir="auto">
+                </label>
+                <div class="row">
+                  <button class="btn primary" id="profile-name-save">حفظ الاسم</button>
+                  <button class="btn ghost" id="profile-avatar-pick">تغيير الصورة</button>
+                </div>
+                <p class="muted small">ديسكورد يسمح بتغيير الاسم مرتين في الساعة تقريباً.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>ملف ‎.env‎ <span class="muted small" id="env-file"></span></h2>
+            <label class="check"><input type="checkbox" id="env-restart" checked> ريستارت البوت بعد الحفظ</label>
+          </div>
+          <p class="muted small">القيم ما تنعرض أبداً عشان الأمان. اكتب قيمة جديدة واحفظ عشان تستبدلها.</p>
+          <table class="table" id="env-table">
+            <thead><tr><th>المفتاح</th><th>الحالة</th><th>قيمة جديدة</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="row env-add">
+            <input class="input" id="env-new-key" placeholder="NEW_KEY" dir="ltr">
+            <input class="input" id="env-new-value" placeholder="القيمة" dir="ltr">
+            <button class="btn ghost" id="env-add">إضافة مفتاح</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Server -->
+      <section class="page" id="page-server">
+        <header class="page-head">
+          <div>
+            <h1>السيرفر</h1>
+            <p class="muted" id="server-host"></p>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="update-run">تحديث من GitHub</button>
+          </div>
+        </header>
+        <div class="meters" id="server-meters"></div>
+        <div class="panel">
+          <h2>التحديث</h2>
+          <p class="muted small">يسحب آخر نسخة من GitHub، ويثبّت المكتبات اللي تغيّرت، ويسوي ريستارت للبوتات.</p>
+          <div class="console short" id="update-console" dir="ltr"><div class="empty">ما فيه تحديث شغال</div></div>
+        </div>
+      </section>
+
+      <!-- Report -->
+      <section class="page" id="page-report">
+        <header class="page-head">
+          <div>
+            <h1>تقرير لـ Claude</h1>
+            <p class="muted">إذا فيه مشكلة: سوّ تقرير وأرسله لـ GitHub، وبعدها قل لـ Claude "شف آخر تقرير"</p>
+          </div>
+        </header>
+        <div class="grid-2">
+          <div class="panel">
+            <h2>تقرير جديد</h2>
+            <div class="form">
+              <label>البوت اللي فيه المشكلة
+                <select class="input" id="report-focus">
+                  <option value="">كل البوتات</option>
+                </select>
+              </label>
+              <label>وش المشكلة؟ (اختياري)
+                <textarea class="input" id="report-note" rows="4" maxlength="2000" placeholder="مثال: بوت الموسيقى يوقف بعد 5 دقايق" dir="auto"></textarea>
+              </label>
+              <div class="row wrap">
+                <button class="btn primary" id="report-github">إرسال لـ GitHub</button>
+                <button class="btn ghost" id="report-preview">معاينة</button>
+                <button class="btn ghost" id="report-copy">نسخ</button>
+                <button class="btn ghost" id="report-save">حفظ ‎.md‎</button>
+              </div>
+              <div class="notice hidden" id="report-result"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>التقرير التلقائي</h2>
+            <label class="switch">
+              <input type="checkbox" id="auto-report">
+              <span class="slider"></span>
+              <span>افتح تقرير تلقائياً إذا طاح بوت 3 مرات خلال 10 دقايق</span>
+            </label>
+            <p class="muted small" id="github-state"></p>
+            <p class="muted small">التقرير فيه: حالة البوتات، وآخر الأخطاء، وأسماء مفاتيح ‎.env‎ بدون قيمها. التوكنات تنشال تلقائياً قبل الإرسال.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>المعاينة</h2>
+          <pre class="console report-preview" id="report-text" dir="ltr"></pre>
+        </div>
+      </section>
+
+      <!-- Connection -->
+      <section class="page" id="page-connection">
+        <header class="page-head">
+          <div>
+            <h1>الاتصال</h1>
+            <p class="muted">اربط البرنامج بالـ Agent اللي على السيرفر</p>
+          </div>
+        </header>
+        <div class="panel narrow">
+          <div class="form">
+            <label>رابط السيرفر
+              <input class="input" id="conn-server" placeholder="https://control.example.com" dir="ltr">
+            </label>
+            <label>مفتاح API
+              <input class="input" id="conn-key" type="password" placeholder="الصق المفتاح من npm run keygen" dir="ltr">
+            </label>
+            <div class="row">
+              <button class="btn primary" id="conn-save">اتصال</button>
+              <button class="btn ghost" id="conn-forget">نسيان المفتاح</button>
+            </div>
+            <p class="muted small" id="conn-key-state"></p>
+            <hr>
+            <label class="switch"><input type="checkbox" id="pref-notify"><span class="slider"></span><span>إشعارات ويندوز إذا طاح بوت</span></label>
+            <label class="switch"><input type="checkbox" id="pref-tray"><span class="slider"></span><span>زر الإغلاق يخلي البرنامج في الخلفية (جنب الساعة)</span></label>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+  <script src="app.js"></script>
+</body>
+</html>

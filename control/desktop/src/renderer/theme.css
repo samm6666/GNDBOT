@@ -1,0 +1,23 @@
+/* GND Control theme tokens.
+   Swap these values for the website palette (src/web/public/ui.css) to match it exactly. */
+:root {
+  --bg: #0b0b12;
+  --bg-2: #11111b;
+  --surface: #161624;
+  --surface-2: #1d1d2e;
+  --border: #2a2a40;
+  --text: #ecebf5;
+  --muted: #9a98b3;
+  --accent: #7c5cff;
+  --accent-2: #a78bfa;
+  --accent-glow: rgba(124, 92, 255, 0.35);
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --info: #60a5fa;
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --font: "Cairo", "IBM Plex Sans Arabic", "Tajawal", "Segoe UI", Tahoma, sans-serif;
+  --mono: "Cascadia Mono", "Consolas", "JetBrains Mono", ui-monospace, monospace;
+}

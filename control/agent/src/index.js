@@ -16,8 +16,8 @@ function log(...args) {
   console.log(new Date().toISOString(), ...args);
 }
 
-// Every secret value from the bots' .env files is removed from logs and reports.
-function loadSecrets(config, redactor) {
+// Every secret value from the bots' .env files and pm2 env is removed from logs and reports.
+async function loadSecrets(config, redactor, control) {
   redactor.addSecrets([config.apiKey, config.github.token, config.lavalink.password]);
   for (const bot of config.bots) {
     try {
@@ -26,6 +26,17 @@ function loadSecrets(config, redactor) {
     } catch {
       // ignore bad paths here; the API reports them
     }
+  }
+  if (!control) return;
+  try {
+    const names = new Set(config.bots.map((b) => b.pm2));
+    for (const proc of await control.list()) {
+      if (!names.has(proc.name) || !proc.pm2_env) continue;
+      redactor.addEnv(proc.pm2_env.env || {});
+      redactor.addEnv(proc.pm2_env);
+    }
+  } catch {
+    // pm2 unavailable for a moment; the next pass picks it up
   }
 }
 
@@ -38,18 +49,22 @@ async function main() {
   }
 
   const redactor = new Redactor();
-  loadSecrets(config, redactor);
-  setInterval(() => loadSecrets(config, redactor), 5 * 60_000).unref();
+  await loadSecrets(config, redactor);
 
   const control = new Pm2Control(config);
   await control.connect();
+  await loadSecrets(config, redactor, control);
+  setInterval(() => loadSecrets(config, redactor, control), 5 * 60_000).unref();
 
   const settings = new Settings(config.dataDir, { autoReport: config.autoReport.enabled });
   const github = new GitHubReporter(config.github);
   const watch = new CrashWatch(config.autoReport);
   const updater = new Updater(config, control, redactor);
 
-  control.on('event', (e) => watch.onEvent(e));
+  control.on('event', (e) => {
+    watch.onEvent(e);
+    if (e.event === 'online') loadSecrets(config, redactor, control); // pick up env of newly started bots
+  });
 
   watch.on('alert', async (alert) => {
     log(`[alert] ${alert.bot}: ${alert.reason}`);

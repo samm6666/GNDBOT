@@ -1,0 +1,52 @@
+{
+  "name": "gnd-control",
+  "productName": "GND Control",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Desktop app to control the GND Discord bots",
+  "author": "GND",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64 --publish never",
+    "preview": "node test/preview.js"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.gnd.control",
+    "productName": "GND Control",
+    "copyright": "GND",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "GND Control",
+      "artifactName": "GND-Control-Setup-${version}.exe"
+    }
+  }
+}
