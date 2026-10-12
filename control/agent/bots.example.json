@@ -1,0 +1,6 @@
+[
+  { "id": "music",    "label": "الموسيقى", "pm2": "gnd-music",  "dir": ".",        "env": ".env",        "kind": "bot" },
+  { "id": "games",    "label": "الألعاب",  "pm2": "gnd-games",  "dir": "games",    "env": "games/.env",  "kind": "bot" },
+  { "id": "system",   "label": "السيستم",  "pm2": "gnd-system", "dir": "system",   "env": "system/.env", "kind": "bot" },
+  { "id": "lavalink", "label": "Lavalink", "pm2": "lavalink",   "dir": "lavalink", "env": null,          "kind": "service" }
+]
